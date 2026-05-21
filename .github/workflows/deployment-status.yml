@@ -78,29 +78,26 @@ jobs:
             const previousSha = process.env.PREVIOUS_SHA;
             const packageVersion = process.env.PACKAGE_VERSION;
 
-            const body = [
-              '## 🚀 Deployment Tracking',
-              '',
-              `- **Current Commit**: \`${currentSha}\``,
-              `- **Previous Commit**: \`${previousSha}\``,
-              `- **Package Version**: \`${packageVersion}\``,
-              `- **Triggered By**: @${context.actor}`,
-              `- **Workflow Run**: [${context.runId}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
-              '',
-              '### Pipeline Status',
-              '- [x] Pre-deployment checks',
-              '- [ ] Rollback preparation',
-              '- [ ] Post-deployment finalization',
-              '',
-              '_This issue is automatically managed by the Deployment Status workflow._',
-            ].join('
-');
+            const body = `## 🚀 Deployment Tracking
+
+            - **Current Commit**: \`${currentSha}\`
+            - **Previous Commit**: \`${previousSha}\`
+            - **Package Version**: \`${packageVersion}\`
+            - **Triggered By**: @${context.actor}
+            - **Workflow Run**: [${context.runId}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
+
+            ### Pipeline Status
+            - [x] Pre-deployment checks
+            - [ ] Rollback preparation
+            - [ ] Post-deployment finalization
+
+            _This issue is automatically managed by the Deployment Status workflow._`;
 
             const issue = await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: `Deployment Tracking - ${currentSha}`,
-              body,
+              body: body.replace(/^            /gm, ''),
               labels: ['deployment', 'in-progress'],
             });
 
@@ -121,28 +118,25 @@ jobs:
             const previousSha = process.env.PREVIOUS_SHA;
             const packageVersion = process.env.PACKAGE_VERSION;
 
-            const body = [
-              '## ✅ Pre-deployment checks completed',
-              '',
-              'All required quality gates passed successfully:',
-              '- ✅ Dependencies installed (`npm ci`)',
-              '- ✅ Lint passed (`npm run lint`)',
-              '- ✅ Tests passed (`npm test`)',
-              '',
-              '### Deployment Information',
-              `- **Current Commit**: \`${currentSha}\``,
-              `- **Previous Commit**: \`${previousSha}\``,
-              `- **Package Version**: \`${packageVersion}\``,
-              '',
-              'Proceeding to rollback preparation...',
-            ].join('
-');
+            const body = `## ✅ Pre-deployment checks completed
+
+            All required quality gates passed successfully:
+            - ✅ Dependencies installed (\`npm ci\`)
+            - ✅ Lint passed (\`npm run lint\`)
+            - ✅ Tests passed (\`npm test\`)
+
+            ### Deployment Information
+            - **Current Commit**: \`${currentSha}\`
+            - **Previous Commit**: \`${previousSha}\`
+            - **Package Version**: \`${packageVersion}\`
+
+            Proceeding to rollback preparation...`;
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issueNumber,
-              body,
+              body: body.replace(/^            /gm, ''),
             });
 
             core.info('Pre-deployment checks completed comment posted');
@@ -497,50 +491,47 @@ jobs:
             const scriptCreated = process.env.SCRIPT_CREATED;
             const backupCreated = process.env.BACKUP_CREATED;
 
-            const body = [
-              '## 🔄 Rollback Plan Ready',
-              '',
-              'A complete rollback package has been prepared and uploaded as a workflow artifact.',
-              '',
-              '### Deployment Context',
-              `- Previous Commit: \`${previousSha}\``,
-              `- Current Commit: \`${currentSha}\``,
-              `- Package Version: \`${packageVersion}\``,
-              `- Artifact: \`${artifactName}\``,
-              `- SHA256: \`${checksum}\``,
-              '',
-              '### Rollback Components',
-              '- ✅ Executable rollback script with comprehensive error handling (`rollback.sh`)',
-              '- ✅ Configuration backups (package.json, package-lock.json, environment template)',
-              '- ✅ Dependency verification script (`verify-dependencies.sh`)',
-              '- ✅ Detailed rollback documentation with step-by-step instructions (`ROLLBACK.md`)',
-              '- ✅ Compressed rollback package with SHA256 checksums',
-              '- ✅ Per-file SHA256 manifest (`checksums.txt`)',
-              '',
-              '### Verification',
-              `- Rollback script created: ${scriptCreated}`,
-              `- Configuration backup: ${backupCreated}`,
-              '- Artifact retention: 30 days',
-              '',
-              '### Quick Rollback Command',
-              'Download the artifact, verify it, and execute the rollback:',
-              '```bash',
-              `# Download the artifact ${artifactName} from the workflow run`,
-              `tar -xzf ${artifactName}.tar.gz`,
-              'cd rollback-artifacts',
-              'sha256sum -c checksums.txt',
-              './rollback.sh',
-              '```',
-              '',
-              'Proceeding to post-deployment finalization...',
-            ].join('
-');
+            const body = `## 🔄 Rollback Plan Ready
+
+            A complete rollback package has been prepared and uploaded as a workflow artifact.
+
+            ### Deployment Context
+            - Previous Commit: \`${previousSha}\`
+            - Current Commit: \`${currentSha}\`
+            - Package Version: \`${packageVersion}\`
+            - Artifact: \`${artifactName}\`
+            - SHA256: \`${checksum}\`
+
+            ### Rollback Components
+            - ✅ Executable rollback script with comprehensive error handling (\`rollback.sh\`)
+            - ✅ Configuration backups (package.json, package-lock.json, environment template)
+            - ✅ Dependency verification script (\`verify-dependencies.sh\`)
+            - ✅ Detailed rollback documentation with step-by-step instructions (\`ROLLBACK.md\`)
+            - ✅ Compressed rollback package with SHA256 checksums
+            - ✅ Per-file SHA256 manifest (\`checksums.txt\`)
+
+            ### Verification
+            - Rollback script created: ${scriptCreated}
+            - Configuration backup: ${backupCreated}
+            - Artifact retention: 30 days
+
+            ### Quick Rollback Command
+            Download the artifact, verify it, and execute the rollback:
+            \`\`\`bash
+            # Download the artifact ${artifactName} from the workflow run
+            tar -xzf ${artifactName}.tar.gz
+            cd rollback-artifacts
+            sha256sum -c checksums.txt
+            ./rollback.sh
+            \`\`\`
+
+            Proceeding to post-deployment finalization...`;
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issueNumber,
-              body,
+              body: body.replace(/^            /gm, ''),
             });
 
             core.info('Rollback plan comment posted');
@@ -598,34 +589,31 @@ jobs:
             const previousSha = process.env.PREVIOUS_SHA;
             const packageVersion = process.env.PACKAGE_VERSION;
 
-            const body = [
-              '## ✅ Deployment Completed Successfully',
-              '',
-              `The deployment of commit \`${currentSha}\` has finished and all post-deployment steps have completed.`,
-              '',
-              '### Deployment Summary',
-              `- **Current Commit**: \`${currentSha}\``,
-              `- **Previous Commit**: \`${previousSha}\``,
-              `- **Package Version**: \`${packageVersion}\``,
-              '',
-              '### Rollback Artifact Details',
-              `- **Artifact**: \`${artifactName}\``,
-              `- **SHA256**: \`${checksum}\``,
-              '- **Retention**: 30 days',
-              `- **Workflow Run**: [${context.runId}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
-              '',
-              `If a rollback is required, download the \`${artifactName}\` artifact, verify`,
-              'its SHA256 checksum, then execute the bundled `rollback.sh` script.',
-              '',
-              'Closing this deployment tracking issue.',
-            ].join('
-');
+            const body = `## ✅ Deployment Completed Successfully
+
+            The deployment of commit \`${currentSha}\` has finished and all post-deployment steps have completed.
+
+            ### Deployment Summary
+            - **Current Commit**: \`${currentSha}\`
+            - **Previous Commit**: \`${previousSha}\`
+            - **Package Version**: \`${packageVersion}\`
+
+            ### Rollback Artifact Details
+            - **Artifact**: \`${artifactName}\`
+            - **SHA256**: \`${checksum}\`
+            - **Retention**: 30 days
+            - **Workflow Run**: [${context.runId}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
+
+            If a rollback is required, download the \`${artifactName}\` artifact, verify
+            its SHA256 checksum, then execute the bundled \`rollback.sh\` script.
+
+            Closing this deployment tracking issue.`;
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issueNumber,
-              body,
+              body: body.replace(/^            /gm, ''),
             });
 
             core.info('Posted deployment completion comment');
